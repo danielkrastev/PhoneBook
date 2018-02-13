@@ -24,7 +24,7 @@ public class PhoneBook {
 		 * next digit is is between 2-9
 		 * next are exactly 6 digits between 0-9
 		 * */
-		Pattern p = Pattern.compile("08[7,8,9][2-9]\\d{6}|03598[7,8,9][2-9]\\d{6}");  
+		Pattern p = Pattern.compile("08[7,8,9][2-9]\\d{6}|003598[7,8,9][2-9]\\d{6}");  
 		Matcher m = p.matcher(phoneNumber);  
 		return  m.matches();  		
 	}
