@@ -46,6 +46,19 @@ public class PhoneBook {
 		public String toString() {
 			return phoneNumber + " " + outCalls;
 		}
+		
+		@Override
+		public boolean equals(Object o){
+			if (this == o) {
+				return true;
+			}
+			if (! (o instanceof PhoneBookRecord)) {
+				return false;
+			}else {
+				PhoneBookRecord rec = (PhoneBookRecord) o;
+				return rec.getPhoneNumber().equals(this.getPhoneNumber());
+			}
+		}
 	}
 
 	public static Comparator<PhoneBookRecord> PhoneBookComparator = new Comparator<PhoneBookRecord>() {
