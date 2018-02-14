@@ -5,14 +5,10 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -21,7 +17,7 @@ public class PhoneBook {
 	class ValidationException extends Exception{
 	}
 	
-	class PhoneBookRecord{
+	class PhoneBookRecord implements Comparable<PhoneBookRecord>{
 		String phoneNumber;
 		Integer outCalls;
 		
@@ -48,6 +44,11 @@ public class PhoneBook {
 		}
 		
 		@Override
+		public int hashCode() {
+			return this.phoneNumber.hashCode();
+		}
+		
+		@Override
 		public boolean equals(Object o){
 			if (this == o) {
 				return true;
@@ -59,39 +60,40 @@ public class PhoneBook {
 				return rec.getPhoneNumber().equals(this.getPhoneNumber());
 			}
 		}
+
+		@Override
+		public int compareTo(PhoneBookRecord record) {
+			if (this==record) {
+				return 0;
+			}
+			// sort in descending order
+		    return record.getOutCalls() - this.outCalls;
+		}
 	}
 
-	public static Comparator<PhoneBookRecord> PhoneBookComparator = new Comparator<PhoneBookRecord>() {
-		@Override
-		public int compare(PhoneBookRecord first, PhoneBookRecord second) {
-		    // sort in descending order
-		    return second.getOutCalls() - first.getOutCalls();
-	    }};
-
 	private Map<String, PhoneBookRecord> nameCatalog;
-	//store the 5 top numbers 
-	private TreeSet<PhoneBookRecord> mostUsed; 
 
 	public PhoneBook(){
 		this.nameCatalog = new TreeMap<String, PhoneBookRecord>();
-		this.mostUsed = new TreeSet <PhoneBookRecord>(PhoneBookComparator);
 	}
 
+	/*
+	 * Validates a Bulgarian phone number
+	 * first digits are either a single 0 or 00359  
+	 * next two digits are 87, 88 or 89
+	 * next digit is is between 2-9
+	 * next are exactly 6 digits between 0-9
+	 * */
 	public boolean is_valid (String phoneNumber) {
-		/*
-		 * Validates a Bulgarian phone number
-		 * first digits are either a single 0 or 00359  
-		 * next two digits are 87, 88 or 89
-		 * next digit is is between 2-9
-		 * next are exactly 6 digits between 0-9
-		 * */
 		Pattern p = Pattern.compile("08[7,8,9][2-9]\\d{6}|003598[7,8,9][2-9]\\d{6}");  
 		Matcher m = p.matcher(phoneNumber);
 		return  m.matches();  		
 	}
 
+	/*
+	 * Transforms a valid phone number into normalized format
+	 * */
 	private String normalize (String phoneNumber) throws ValidationException {
-		// Transforms a valid phone number into normalized format
 		if (! is_valid(phoneNumber)) {
 			throw new ValidationException();
 		}
@@ -126,7 +128,6 @@ public class PhoneBook {
             String line = null;
             while((line = bufferedReader.readLine()) != null) {
                 if (line.equals("")){
-                	//empty line
                 	continue;
                 }
                 String [] line_parts = line.split("\\s+");
@@ -161,46 +162,26 @@ public class PhoneBook {
 
 	public void makeCall(String name) {
 		/*
-		 * Increment the calls and update mostUsed if needed
+		 * Increment the calls count
 		 */
 		PhoneBookRecord record = nameCatalog.get(name);
 		if (record != null) {
 			Integer calls = record.getOutCalls();
-			calls++;
-			record.setOutCalls(calls);
+			record.setOutCalls(++calls);
 			nameCatalog.put(name, record);
-
-			// Check if this record is not in the top used
-			if (!mostUsed.contains(record)) {
-				if(mostUsed.size() < 5) {
-					mostUsed.add(record);
-				}else {
-					// Get the last element in mostUsed
-					PhoneBookRecord last = mostUsed.last();
-					if (calls > last.getOutCalls()) {
-						mostUsed.remove(last);
-						mostUsed.add(record);
-					}
-				}
-			}
 		}
 	}
-
-	public void print() {
+	
+	public void printCatalog() {
 		for (Map.Entry<String, PhoneBookRecord> entry : nameCatalog.entrySet()) {
 			System.out.println(entry.getKey() + "=" + entry.getValue().getPhoneNumber());
 		}
 	}
 
-	public void printCalls() {
-		//Collection <PhoneBookRecord>  records = nameCatalog.values();
+	public void printMostUsed(){
 		List<PhoneBookRecord> records = new ArrayList<PhoneBookRecord>(nameCatalog.values());
-		Collections.sort(records, PhoneBookComparator);
-		System.out.println(records);
-	}
-	
-	public void printMostUsed() {
-		for(PhoneBookRecord record: mostUsed){
+		Collections.sort(records);
+		for(PhoneBookRecord record: records.subList(0, 5)){
 			System.out.println(record);
 		}
 	}
